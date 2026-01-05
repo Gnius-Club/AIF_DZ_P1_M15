@@ -2,152 +2,227 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>El Misterio de los Corazones Rotos</title>
     <style>
-        /* --- ESTÉTICA GENERAL --- */
+        /* --- FUENTES Y VARIABLES --- */
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
 
         :root {
-            --bg-color: #fdfbf7;
-            --primary: #8ac6d1;   /* Azul Pastel */
-            --secondary: #ffb7b2; /* Rosa Pastel */
-            --accent: #ffdac1;    /* Naranja/Crema Pastel */
-            --text: #555;
-            --success: #b5ead7;
-            --error: #e2f0cb;
+            --bg-gradient: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            --primary: #5dade2;
+            --secondary: #ec7063;
+            --accent: #f4d03f;
+            --success: #58d68d;
+            --text: #2c3e50;
             --card-bg: #ffffff;
+            --font-main: 'Quicksand', sans-serif;
         }
 
+        /* --- ESTRUCTURA GENERAL --- */
         body {
-            font-family: 'Quicksand', sans-serif;
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            font-family: var(--font-main);
+            background: var(--bg-gradient);
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh; /* Altura completa de la ventana */
+            width: 100vw;
+            overflow: hidden; /* Evita scroll en el body, lo manejamos en la tarjeta */
             color: var(--text);
-            overflow: hidden; /* Para evitar scroll por confeti */
+            user-select: none;
         }
 
+        /* --- CONTENEDOR DE JUEGO RESPONSIVO --- */
         #game-container {
             background-color: var(--card-bg);
             width: 90%;
-            max-width: 500px;
-            border-radius: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 550px;
+            /* Altura dinámica: se ajusta al contenido pero nunca se sale de la pantalla */
+            max-height: 95vh; 
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             padding: 20px;
             text-align: center;
             position: relative;
-            min-height: 500px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            transition: all 0.3s ease;
+            align-items: center;
+            border: 4px solid #fff;
+            
+            /* Permite scroll interno si la pantalla es muy bajita */
+            overflow-y: auto; 
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: var(--primary) #f0f0f0;
         }
 
-        h1, h2 { margin-bottom: 10px; color: #4a4a4a; }
-        p { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; }
+        /* Estilo del scrollbar para Chrome/Safari */
+        #game-container::-webkit-scrollbar { width: 8px; }
+        #game-container::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 10px; }
+        #game-container::-webkit-scrollbar-thumb { background-color: var(--primary); border-radius: 10px; }
 
-        /* --- ELEMENTOS VISUALES --- */
-        .character-display {
-            font-size: 5rem;
-            margin: 10px 0;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .heart-display {
-            font-size: 6rem;
-            margin: 10px 0;
-            display: inline-block;
-        }
-
-        /* Animaciones */
-        @keyframes heartbeat {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
+        /* --- TIPOGRAFÍA ADAPTABLE --- */
+        h1 { 
+            color: #2e86c1; 
+            font-size: clamp(1.5rem, 4vw, 2rem); /* Se adapta entre 1.5 y 2rem */
+            margin: 5px 0 15px 0; 
+            line-height: 1.1; 
         }
         
-        @keyframes break {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(-10deg); }
-            75% { transform: rotate(10deg); }
-            100% { transform: rotate(0deg); }
+        h2 { 
+            color: #884ea0; 
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            margin: 5px 0 10px 0; 
         }
 
-        @keyframes heal {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); }
+        p { 
+            font-size: clamp(1rem, 2.5vw, 1.2rem); 
+            line-height: 1.4; 
+            margin-bottom: 15px; 
+            color: #555; 
         }
 
-        .pulsing { animation: heartbeat 1.5s infinite; }
-        .shaking { animation: break 0.5s ease-in-out; }
-        .healing { animation: heal 0.8s ease-out forwards; }
+        /* --- ELEMENTOS VISUALES --- */
+        .character-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        /* Emojis flexibles */
+        .emoji-lg { font-size: clamp(4rem, 10vw, 6rem); transition: transform 0.3s; }
+        .emoji-md { font-size: clamp(3rem, 8vw, 4rem); }
+        .heart-lg { font-size: clamp(4rem, 12vw, 7rem); margin: 5px 0; display: inline-block; }
+
+        /* --- ANIMACIONES --- */
+        @keyframes heartbeat { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 25% { transform: translate(-3px, 0px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 75% { transform: translate(3px, 1px) rotate(-1deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes talking { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .anim-pulse { animation: heartbeat 1.5s infinite; }
+        .anim-shake { animation: shake 0.5s; }
+        .anim-pop { animation: popIn 0.3s ease-out forwards; }
+        .anim-talk { animation: talking 0.2s infinite; }
 
         /* --- BOTONES --- */
         .btn-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 10px; /* Menos espacio entre botones */
+            width: 100%;
+            margin-top: 10px;
         }
 
         button {
             border: none;
-            padding: 15px 20px;
+            padding: 12px 20px; /* Padding reducido para pantallas pequeñas */
             border-radius: 15px;
-            font-family: 'Quicksand', sans-serif;
-            font-size: 1rem;
+            font-family: var(--font-main);
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             font-weight: 700;
             cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            color: #555;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            width: 100%;
+            min-height: 50px; /* Asegura área táctil */
         }
 
-        button:active { transform: scale(0.98); }
-        button:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        button:hover { filter: brightness(1.05); }
 
+        .btn-start { background-color: var(--success); color: white; font-size: 1.3rem; padding: 15px; }
         .btn-primary { background-color: var(--primary); color: white; }
-        .btn-next { background-color: var(--secondary); color: white; font-size: 1.2rem; margin-top: 15px; }
+        .btn-next { background-color: var(--accent); color: #555; }
         
-        .btn-logic { background-color: #e0e0e0; border: 2px solid #ccc; }
-        .btn-empathy { background-color: var(--success); border: 2px solid #a3d9c5; }
-        .btn-negative { background-color: #ffccbc; border: 2px solid #ffab91; }
+        .btn-logic { background-color: #d6dbdf; color: #555; border: 2px solid #bdc3c7; }
+        .btn-empathy { background-color: #abebc6; color: #186a3b; border: 2px solid #58d68d; }
+        .btn-negative { background-color: #fadbd8; color: #943126; border: 2px solid #ec7063; }
 
-        /* --- ESTADOS DEL JUEGO (Scenes) --- */
-        .scene { display: none; opacity: 0; transition: opacity 0.5s ease-in-out; }
-        .scene.active { display: block; opacity: 1; }
-
-        /* --- CAJA DE DIÁLOGO IA --- */
-        .bot-box {
-            background-color: #f0f4f8;
-            border: 2px dashed #b0bec5;
-            border-radius: 10px;
-            padding: 10px;
-            margin: 15px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            color: #455a64;
+        /* Botón Audio */
+        .audio-btn {
+            background: #fff;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            min-height: 45px;
+            padding: 0;
+            display: inline-flex;
+            font-size: 1.2rem;
+            margin-left: 10px;
+            box-shadow: none;
+            vertical-align: middle;
+            flex-shrink: 0; /* Evita que se aplaste */
         }
 
-        /* --- CONFETI --- */
-        .confetti {
-            position: absolute;
+        /* --- INTERFAZ BOT --- */
+        .bot-interface {
+            background-color: #2c3e50;
+            color: #58d68d;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            width: 100%;
+            box-sizing: border-box;
+            border: 3px solid #bdc3c7;
+            text-align: left;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        /* --- ESCENAS --- */
+        .scene { display: none; width: 100%; }
+        .scene.active { display: block; animation: popIn 0.3s ease; }
+
+        /* --- PROGRESO --- */
+        .progress-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .progress-dot {
             width: 10px;
             height: 10px;
-            top: -10px;
-            z-index: 999;
-            animation: fall linear forwards;
+            background-color: #ddd;
+            border-radius: 50%;
         }
-        @keyframes fall {
-            to { transform: translateY(110vh) rotate(720deg); }
+        .progress-dot.active { background-color: var(--success); }
+
+        /* --- CONFETI --- */
+        .confetti { position: absolute; width: 10px; height: 10px; top: -10px; z-index: 999; animation: fall linear forwards; border-radius: 50%; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+
+        /* --- MEDIA QUERIES PARA PANTALLAS PEQUEÑAS (MÓVILES) --- */
+        @media (max-width: 480px) {
+            #game-container {
+                padding: 15px;
+                width: 95%;
+            }
+            h1 { font-size: 1.4rem; }
+            .emoji-lg { font-size: 3.5rem; }
+            .emoji-md { font-size: 2.5rem; }
+            button { padding: 10px 15px; min-height: 45px; }
+            .bot-interface { padding: 10px; font-size: 0.8rem; }
+        }
+
+        /* --- MEDIA QUERIES PARA PANTALLAS BAJAS (LANDSCAPE CELULAR/LAPTOP) --- */
+        @media (max-height: 650px) {
+            h1 { margin: 5px 0; font-size: 1.3rem; }
+            p { margin-bottom: 8px; font-size: 0.95rem; }
+            .emoji-lg { font-size: 3rem; margin: 0; }
+            .heart-lg { font-size: 4rem; margin: 0; }
+            .bot-interface { padding: 8px; margin: 5px 0; }
+            button { padding: 8px; min-height: 40px; }
+            .btn-group { gap: 6px; }
         }
 
     </style>
@@ -156,307 +231,317 @@
 
     <div id="game-container">
         
-        <!-- ESCENA 1: INTRODUCCIÓN -->
-        <div id="intro-scene" class="scene active">
-            <div class="character-display">👩‍🏫 🤖</div>
-            <h1>Taller de Emociones</h1>
-            <p>¡Hola! Soy la Guardiana. Él es <strong>Bot-Lógico</strong>. Es muy inteligente calculando datos, pero no entiende los sentimientos.</p>
-            <p>Necesitamos tu ayuda para enseñar a Bot-Lógico qué es la <strong>EMPATÍA</strong> y curar los corazones rotos del pueblo.</p>
-            <button class="btn-primary" onclick="game.startLevel()">Ir al Pueblo 🏘️</button>
+        <!-- UI: Puntos de Progreso -->
+        <div class="progress-bar" id="progress-container" style="display:none;">
+            <div class="progress-dot" id="dot-0"></div>
+            <div class="progress-dot" id="dot-1"></div>
+            <div class="progress-dot" id="dot-2"></div>
         </div>
 
-        <!-- ESCENA 2: EL PROBLEMA (Estado A) -->
-        <div id="problem-scene" class="scene">
-            <h2 id="level-title">Nivel 1</h2>
-            <div class="character-display" id="friend-emoji">👧</div>
-            <div class="heart-display pulsing">💔</div>
-            <p id="problem-text">Ana está triste...</p>
-            <button class="btn-primary" onclick="game.showBotIntervention()">Ver qué dice Bot-Lógico 🤖</button>
+        <!-- ESCENA 0: INICIO -->
+        <div id="start-screen" class="scene active">
+            <div class="emoji-lg anim-pulse">❤️</div>
+            <h1>Corazones Rotos</h1>
+            <p>Juego de Empatía para 1° Primaria</p>
+            <p style="font-size: 0.9rem; color: #888;">🔊 Activa tu sonido</p>
+            <button class="btn-start" onclick="game.init()">¡Jugar! ▶️</button>
         </div>
 
-        <!-- ESCENA 3: INTERVENCIÓN IA (Estado B) -->
-        <div id="bot-scene" class="scene">
-            <div class="character-display">🤖</div>
-            <h2>Análisis de Bot-Lógico</h2>
-            <div class="bot-box">
-                <p>⚡ PROCESANDO DATOS... ⚡</p>
-                <p id="bot-solution-text">Solución detectada.</p>
+        <!-- ESCENA 1: INTRO -->
+        <div id="intro-scene" class="scene">
+            <div class="character-container">
+                <div class="emoji-md" id="guardian-avatar">👩‍🏫</div>
+                <div class="emoji-md" id="bot-avatar">🤖</div>
             </div>
-            <p>Bot-Lógico tiene una solución, pero... ¿es la mejor?</p>
-            <button class="btn-primary" onclick="game.showChoices()">Tomar mi decisión 🤔</button>
+            <h2>La Misión</h2>
+            <div id="intro-text-container">
+                <p>Soy la Guardiana y él es <strong>Bot-Lógico</strong>.</p>
+                <p>Bot es un genio 🧠, pero <strong>no tiene corazón</strong>. No entiende los sentimientos.</p>
+                <p>Ayúdanos a usar la <strong>Empatía</strong>.</p>
+            </div>
+            <button class="btn-primary" onclick="game.startLevel()">¡Entendido! 👍</button>
         </div>
 
-        <!-- ESCENA 4: DECISIÓN (Estado C) -->
+        <!-- ESCENA 2: PROBLEMA -->
+        <div id="problem-scene" class="scene">
+            <h2 id="level-title">Misión 1</h2>
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+                <div class="emoji-lg anim-shake" id="friend-emoji">👧</div>
+                <div class="heart-lg anim-pulse">💔</div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:center; margin-bottom:15px;">
+                <p id="problem-text" style="margin:0;">...</p>
+                <button class="audio-btn" onclick="voice.speakCurrent()">🔊</button>
+            </div>
+            <button class="btn-primary" onclick="game.showBotIntervention()">Ver qué dice Bot 🤖</button>
+        </div>
+
+        <!-- ESCENA 3: BOT -->
+        <div id="bot-scene" class="scene">
+            <div class="emoji-md" id="bot-face">🤖</div>
+            <h2>Bot-Lógico dice:</h2>
+            <div class="bot-interface">
+                <p id="bot-solution-text">...</p>
+            </div>
+            <p>Es lógico... ¿pero es amable?</p>
+            <button class="btn-primary" onclick="game.showChoices()">Tengo una mejor idea 💡</button>
+        </div>
+
+        <!-- ESCENA 4: DECISIÓN -->
         <div id="choice-scene" class="scene">
-            <div class="character-display" id="choice-friend-emoji">👧</div>
-            <div class="heart-display pulsing">💔</div>
-            <p>¿Qué deberíamos hacer?</p>
+            <div class="emoji-md" id="choice-friend-emoji">👧</div>
+            <p>¿Qué harías tú?</p>
             <div class="btn-group" id="choices-container">
-                <!-- Botones generados dinámicamente -->
+                <!-- Botones dinámicos -->
             </div>
         </div>
 
         <!-- ESCENA 5: FEEDBACK -->
         <div id="feedback-scene" class="scene">
-            <div class="character-display" id="feedback-friend-emoji"></div>
-            <div class="heart-display" id="feedback-heart"></div>
+            <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+                <div class="emoji-lg" id="feedback-friend-emoji"></div>
+                <div class="heart-lg" id="feedback-heart"></div>
+            </div>
             <h2 id="feedback-title"></h2>
             <p id="feedback-message"></p>
-            <div id="feedback-action"></div>
+            <div id="feedback-action" style="margin-top:10px; width:100%;"></div>
         </div>
 
         <!-- ESCENA 6: VICTORIA -->
         <div id="victory-scene" class="scene">
-            <div class="character-display">🎉🥳💖</div>
-            <h1>¡Eres un Maestro de la Empatía!</h1>
-            <p>Has enseñado a Bot-Lógico que el corazón es más importante que los cálculos.</p>
-            <div class="character-display">🤖 ❤️ 👩‍🏫</div>
-            <p>Bot-Lógico: "Actualizando sistema... Empatía instalada al 100%."</p>
-            <button class="btn-primary" onclick="location.reload()">Jugar otra vez 🔄</button>
+            <div class="emoji-lg anim-pulse">💖🎉</div>
+            <h1>¡Misión Cumplida!</h1>
+            <p>Has enseñado a Bot que el corazón es lo más importante.</p>
+            <p><strong>¡Eres un Maestro de la Empatía!</strong></p>
+            <button class="btn-start" onclick="location.reload()">Jugar otra vez 🔄</button>
         </div>
 
     </div>
 
     <script>
-        // --- DATOS DEL JUEGO ---
+        /* --- GESTOR DE AUDIO (TTS) --- */
+        class VoiceManager {
+            constructor() {
+                this.synth = window.speechSynthesis;
+                this.lastText = "";
+                // Intentar cargar voces
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = () => this.synth.getVoices();
+                }
+            }
+
+            speak(text, type = 'narrator') {
+                if (this.synth.speaking) this.synth.cancel();
+                this.lastText = text;
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = this.synth.getVoices();
+                // Preferir voz en español
+                const esVoice = voices.find(v => v.lang.includes('es'));
+                if (esVoice) utterance.voice = esVoice;
+
+                if (type === 'bot') {
+                    utterance.pitch = 0.8; utterance.rate = 1.1;
+                } else {
+                    utterance.pitch = 1.2; utterance.rate = 1.0;
+                }
+
+                // Animación simple al hablar
+                utterance.onstart = () => {
+                   const avatar = type === 'bot' ? document.getElementById('bot-face') : document.getElementById('guardian-avatar');
+                   if(avatar) avatar.classList.add('anim-talk');
+                };
+                utterance.onend = () => {
+                   document.querySelectorAll('.anim-talk').forEach(el => el.classList.remove('anim-talk'));
+                };
+
+                this.synth.speak(utterance);
+            }
+
+            speakCurrent() { if (this.lastText) this.speak(this.lastText, 'narrator'); }
+            stop() { this.synth.cancel(); }
+        }
+
+        /* --- SFX SIMPLE --- */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const playTone = (freq, type) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.value = 0.05;
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        };
+
+        /* --- DATOS --- */
         const levels = [
             {
-                id: 1,
-                friendName: "Ana",
-                friendEmoji: "👧",
-                problem: "A Ana se le rompió su dibujo favorito por accidente.",
-                botText: "El papel es un material fungible. Sugiero imprimir una copia en 0.7 segundos.",
+                id: 1, friendName: "Ana", friendEmoji: "👧",
+                problem: "Ana llora porque se rompió su dibujo.",
+                botText: "Datos: Papel roto. Solución: Imprimir copia.",
                 options: [
-                    { type: 'logic', text: "Imprimir copia rápida", icon: "⚙️" },
-                    { type: 'empathy', text: "Abrazarla y hacer uno nuevo juntos", icon: "🤗" },
-                    { type: 'negative', text: "Decirle que no llore por un papel", icon: "😒" }
+                    { type: 'logic', text: "Imprimir copia", icon: "📄" },
+                    { type: 'empathy', text: "Abrazar y dibujar juntas", icon: "🤗" },
+                    { type: 'negative', text: "Decirle 'No llores'", icon: "😐" }
                 ],
                 responses: {
-                    empathy: { text: "¡Ana sonríe! Juntos hicieron un dibujo aún más bonito.", title: "¡Corazón Reparado!" },
-                    logic: { text: "Ana toma la copia... dice gracias, pero sigue triste porque no es el suyo.", title: "Demasiado frío..." },
-                    negative: { text: "Ana llora más fuerte. Eso no ayudó nada.", title: "¡Oh no!" }
+                    empathy: { text: "¡Ana sonríe! El cariño arregló su corazón.", title: "¡Muy bien!" },
+                    logic: { text: "Ana sigue triste. La copia no es igual.", title: "Muy frío..." },
+                    negative: { text: "Ana llora más fuerte.", title: "¡Oh no!" }
                 }
             },
             {
-                id: 2,
-                friendName: "Leo",
-                friendEmoji: "👦",
-                problem: "Leo tiene miedo de entrar a la cueva oscura del parque.",
-                botText: "Probabilidad de peligro: 0.01%. La oscuridad es solo ausencia de fotones.",
+                id: 2, friendName: "Leo", friendEmoji: "👦",
+                problem: "Leo tiene miedo de la cueva oscura.",
+                botText: "Datos: Oscuridad 100%. Peligro 0%.",
                 options: [
-                    { type: 'logic', text: "Explicar que es 99.9% seguro", icon: "⚙️" },
-                    { type: 'negative', text: "Decirle que no sea miedoso", icon: "😒" },
-                    { type: 'empathy', text: "Darle la mano y entrar juntos", icon: "🤝" }
+                    { type: 'negative', text: "Decirle 'Miedoso'", icon: "😠" },
+                    { type: 'empathy', text: "Darle la mano y entrar", icon: "🤝" },
+                    { type: 'logic', text: "Explicar datos", icon: "📊" }
                 ],
                 responses: {
-                    empathy: { text: "Leo se siente seguro contigo y entra valientemente.", title: "¡Valentía Compartida!" },
-                    logic: { text: "Leo entiende los números, pero sus piernas siguen temblando.", title: "Lógico, pero insuficiente" },
-                    negative: { text: "Leo se va corriendo a su casa.", title: "Hirió sus sentimientos" }
+                    empathy: { text: "Con tu ayuda, Leo fue valiente.", title: "¡Excelente!" },
+                    logic: { text: "Leo entiende, pero sigue temblando.", title: "Falta empatía" },
+                    negative: { text: "Leo se fue corriendo.", title: "Mal hecho" }
                 }
             },
             {
-                id: 3,
-                friendName: "Equipo",
-                friendEmoji: "⚽🏀",
-                problem: "Tus amigos discuten: unos quieren fútbol, otros básquet.",
-                botText: "Solución óptima: Jugar 12.5 minutos fútbol y 12.5 minutos básquet.",
+                id: 3, friendName: "Amigos", friendEmoji: "⚽",
+                problem: "Pelean: ¿Fútbol o Básquet?",
+                botText: "Solución: 10 min uno y 10 min otro.",
                 options: [
-                    { type: 'negative', text: "Que lancen una moneda y ya", icon: "😒" },
-                    { type: 'empathy', text: "Inventar un juego que mezcle los dos", icon: "💡" },
-                    { type: 'logic', text: "Cronometrar el tiempo exacto", icon: "⚙️" }
+                    { type: 'empathy', text: "Inventar juego mezclado", icon: "💡" },
+                    { type: 'logic', text: "Usar cronómetro", icon: "⏱️" },
+                    { type: 'negative', text: "Lanzar moneda", icon: "🪙" }
                 ],
                 responses: {
-                    empathy: { text: "¡Qué idea genial! Todos se ríen y juegan al 'Fút-Basket'.", title: "¡Creatividad Empática!" },
-                    logic: { text: "Juegan, pero pasan más tiempo mirando el reloj que divirtiéndose.", title: "Aburrido..." },
-                    negative: { text: "Nadie está de acuerdo con la moneda y siguen peleando.", title: "Conflicto no resuelto" }
+                    empathy: { text: "¡Inventaron el Fút-Basket!", title: "¡Genial!" },
+                    logic: { text: "Juegan aburridos mirando el reloj.", title: "Aburrido" },
+                    negative: { text: "Siguen peleando.", title: "No funcionó" }
                 }
             }
         ];
 
-        // --- SISTEMA DE AUDIO (Web Audio API) ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        const playTone = (freq, type, duration, startTime = 0) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + startTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(audioCtx.currentTime + startTime);
-            osc.stop(audioCtx.currentTime + startTime + duration);
-        };
-
-        const sounds = {
-            win: () => {
-                // Melodía ascendente C-E-G-C (Mágico)
-                playTone(261.63, 'sine', 0.5, 0);
-                playTone(329.63, 'sine', 0.5, 0.2);
-                playTone(392.00, 'sine', 0.5, 0.4);
-                playTone(523.25, 'sine', 1.0, 0.6);
-            },
-            logic: () => {
-                // Robótico
-                playTone(150, 'square', 0.1, 0);
-                playTone(200, 'square', 0.1, 0.1);
-                playTone(100, 'square', 0.1, 0.2);
-            },
-            fail: () => {
-                // Descendente triste
-                playTone(200, 'triangle', 0.4, 0);
-                playTone(150, 'triangle', 0.4, 0.3);
-                playTone(100, 'triangle', 0.8, 0.6);
-            }
-        };
-
-        // --- LÓGICA DEL JUEGO ---
+        /* --- LÓGICA JUEGO --- */
         class Game {
-            constructor() {
-                this.currentLevelIndex = 0;
-                this.scenes = {
-                    intro: document.getElementById('intro-scene'),
-                    problem: document.getElementById('problem-scene'),
-                    bot: document.getElementById('bot-scene'),
-                    choice: document.getElementById('choice-scene'),
-                    feedback: document.getElementById('feedback-scene'),
-                    victory: document.getElementById('victory-scene')
-                };
+            constructor() { this.level = 0; }
+            
+            init() {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                document.getElementById('progress-container').style.display = 'flex';
+                this.switchScene('intro-scene');
+                setTimeout(() => voice.speak("Hola soy la Guardiana. Ayuda a Bot Lógico a entender los sentimientos.", 'narrator'), 500);
             }
 
-            switchScene(sceneName) {
-                // Ocultar todas
-                Object.values(this.scenes).forEach(el => el.classList.remove('active'));
-                // Mostrar nueva
-                setTimeout(() => {
-                    this.scenes[sceneName].classList.add('active');
-                }, 100); // Pequeño delay para suavidad
+            switchScene(id) {
+                document.querySelectorAll('.scene').forEach(el => el.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                playTone(400, 'sine');
+                // Scroll al top del contenedor por si acaso
+                document.getElementById('game-container').scrollTop = 0;
             }
 
             startLevel() {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (this.level >= levels.length) return this.victory();
+                this.updateDots();
+                const l = levels[this.level];
                 
-                if (this.currentLevelIndex >= levels.length) {
-                    this.showVictory();
-                    return;
-                }
-
-                const level = levels[this.currentLevelIndex];
+                document.getElementById('level-title').innerText = `Misión ${l.id}: ${l.friendName}`;
+                document.getElementById('friend-emoji').innerText = l.friendEmoji;
+                document.getElementById('problem-text').innerText = l.problem;
                 
-                // Configurar escena Problema
-                document.getElementById('level-title').innerText = `Misión ${level.id}: ${level.friendName}`;
-                document.getElementById('friend-emoji').innerText = level.friendEmoji;
-                document.getElementById('problem-text').innerText = level.problem;
-                
-                this.switchScene('problem');
+                this.switchScene('problem-scene');
+                setTimeout(() => voice.speak(l.problem, 'narrator'), 500);
             }
 
             showBotIntervention() {
-                const level = levels[this.currentLevelIndex];
-                sounds.logic();
-                document.getElementById('bot-solution-text').innerText = `"${level.botText}"`;
-                this.switchScene('bot');
+                const l = levels[this.level];
+                document.getElementById('bot-solution-text').innerText = l.botText;
+                this.switchScene('bot-scene');
+                playTone(200, 'square');
+                setTimeout(() => voice.speak(l.botText, 'bot'), 500);
             }
 
             showChoices() {
-                const level = levels[this.currentLevelIndex];
-                document.getElementById('choice-friend-emoji').innerText = level.friendEmoji;
-                
-                const container = document.getElementById('choices-container');
-                container.innerHTML = ''; // Limpiar botones anteriores
-
-                level.options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    // Asignar clase según tipo para estilo
-                    btn.className = `btn-${opt.type}`;
-                    btn.innerHTML = `${opt.icon} ${opt.text}`;
-                    btn.onclick = () => this.handleDecision(opt.type);
-                    container.appendChild(btn);
+                const l = levels[this.level];
+                document.getElementById('choice-friend-emoji').innerText = l.friendEmoji;
+                const c = document.getElementById('choices-container');
+                c.innerHTML = '';
+                l.options.forEach(opt => {
+                    const b = document.createElement('button');
+                    b.className = `btn-${opt.type}`;
+                    b.innerHTML = `<span>${opt.icon}</span> ${opt.text}`;
+                    b.onclick = () => this.handle(opt.type);
+                    c.appendChild(b);
                 });
-
-                this.switchScene('choice');
+                this.switchScene('choice-scene');
+                voice.stop();
             }
 
-            handleDecision(type) {
-                const level = levels[this.currentLevelIndex];
-                const feedbackEmoji = document.getElementById('feedback-friend-emoji');
-                const feedbackHeart = document.getElementById('feedback-heart');
-                const feedbackTitle = document.getElementById('feedback-title');
-                const feedbackMsg = document.getElementById('feedback-message');
-                const feedbackAction = document.getElementById('feedback-action');
+            handle(type) {
+                const l = levels[this.level];
+                const res = l.responses[type];
+                const title = document.getElementById('feedback-title');
+                const msg = document.getElementById('feedback-message');
+                const emoji = document.getElementById('feedback-friend-emoji');
+                const heart = document.getElementById('feedback-heart');
+                const act = document.getElementById('feedback-action');
 
-                feedbackEmoji.innerText = level.friendEmoji;
-                feedbackHeart.className = 'heart-display'; // Reset animations
+                emoji.innerText = l.friendEmoji;
+                title.innerText = res.title;
+                msg.innerText = res.text;
+                heart.className = 'heart-lg'; 
 
                 if (type === 'empathy') {
-                    // VICTORIA DE NIVEL
-                    sounds.win();
-                    feedbackHeart.innerText = "💖";
-                    feedbackHeart.classList.add('healing');
-                    feedbackEmoji.innerText = "😄"; // Happy
-                    feedbackTitle.innerText = level.responses.empathy.title;
-                    feedbackTitle.style.color = "var(--primary)";
-                    feedbackMsg.innerText = level.responses.empathy.text;
-                    
-                    feedbackAction.innerHTML = `<button class="btn-next" onclick="game.nextLevel()">Siguiente Amigo ➡️</button>`;
-                } else if (type === 'logic') {
-                    // NEUTRO
-                    sounds.logic();
-                    feedbackHeart.innerText = "💔";
-                    feedbackEmoji.innerText = "😐"; // Neutral
-                    feedbackTitle.innerText = level.responses.logic.title;
-                    feedbackTitle.style.color = "#999";
-                    feedbackMsg.innerText = level.responses.logic.text + " (Es lógico, pero le falta cariño).";
-                    
-                    feedbackAction.innerHTML = `<button class="btn-primary" onclick="game.showChoices()">Intentar de nuevo ↩️</button>`;
+                    playTone(600, 'triangle');
+                    this.confetti();
+                    title.style.color = "var(--success)";
+                    heart.innerText = "💖";
+                    heart.classList.add('anim-pulse');
+                    emoji.innerText = "😄";
+                    act.innerHTML = `<button class="btn-next" onclick="game.next()">Siguiente ➡️</button>`;
                 } else {
-                    // FALLO
-                    sounds.fail();
-                    feedbackHeart.innerText = "🖤";
-                    feedbackHeart.classList.add('shaking');
-                    feedbackEmoji.innerText = "😭"; // Crying
-                    feedbackTitle.innerText = level.responses.negative.title;
-                    feedbackTitle.style.color = "#ff6b6b";
-                    feedbackMsg.innerText = level.responses.negative.text;
-                    
-                    feedbackAction.innerHTML = `<button class="btn-primary" onclick="game.showChoices()">Intentar de nuevo ↩️</button>`;
+                    playTone(150, 'sawtooth');
+                    title.style.color = type === 'logic' ? "#999" : "var(--secondary)";
+                    heart.innerText = type === 'logic' ? "💔" : "🖤";
+                    emoji.innerText = type === 'logic' ? "😐" : "😭";
+                    act.innerHTML = `<button class="btn-primary" onclick="game.showChoices()">Intentar ↩️</button>`;
                 }
-
-                this.switchScene('feedback');
+                this.switchScene('feedback-scene');
+                voice.speak(res.text, 'narrator');
             }
 
-            nextLevel() {
-                this.currentLevelIndex++;
-                this.startLevel();
+            next() { this.level++; this.startLevel(); }
+            
+            updateDots() {
+                document.querySelectorAll('.progress-dot').forEach((d, i) => d.classList.toggle('active', i <= this.level));
             }
 
-            showVictory() {
-                sounds.win();
-                createConfetti();
-                this.switchScene('victory');
+            victory() {
+                this.switchScene('victory-scene');
+                playTone(600, 'triangle');
+                this.confetti();
+                voice.speak("¡Felicidades! Eres un maestro de la empatía.", 'narrator');
+            }
+
+            confetti() {
+                const colors = ['#f4d03f', '#58d68d', '#5dade2'];
+                for(let i=0; i<30; i++) {
+                    const d = document.createElement('div');
+                    d.className = 'confetti';
+                    d.style.left = Math.random()*100+'%';
+                    d.style.background = colors[Math.floor(Math.random()*3)];
+                    d.style.animationDuration = (Math.random()*2+2)+'s';
+                    document.body.appendChild(d);
+                    setTimeout(()=>d.remove(), 4000);
+                }
             }
         }
 
-        // --- EFECTOS VISUALES (CONFETI) ---
-        function createConfetti() {
-            const colors = ['#ffc0cb', '#8ac6d1', '#fff68f', '#b5ead7'];
-            for (let i = 0; i < 50; i++) {
-                const conf = document.createElement('div');
-                conf.classList.add('confetti');
-                conf.style.left = Math.random() * 100 + 'vw';
-                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
-                document.body.appendChild(conf);
-                
-                // Limpieza
-                setTimeout(() => conf.remove(), 4000);
-            }
-        }
-
-        // --- INICIALIZACIÓN ---
+        const voice = new VoiceManager();
         const game = new Game();
-
     </script>
 </body>
 </html>
